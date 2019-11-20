@@ -1,4 +1,6 @@
-﻿using EverStore.Domain;
+﻿using System.Threading.Tasks;
+using EverStore.Domain;
+using MongoDB.Driver;
 
 namespace EverStore.Storage
 {
@@ -14,6 +16,13 @@ namespace EverStore.Storage
         public void AppendEvent(PersistedEvent @event)
         {
             _mongoContext.Collection<PersistedEvent>().InsertOne(@event);
+        }
+
+        public async Task<IAsyncCursor<PersistedEvent>> ReadEventsForwards(string stream, long start, int batchSize)
+        {
+            var filter = Builders<PersistedEvent>.Filter.And(Builders<PersistedEvent>.Filter.Eq(e => e.Stream, stream), Builders<PersistedEvent>.Filter.Gte(e => e.StreamVersion, start));
+            var sort = Builders<PersistedEvent>.Sort.Ascending(e => e.GlobalVersion);
+            return await _mongoContext.Collection<PersistedEvent>().FindAsync(filter, new FindOptions<PersistedEvent> {BatchSize = batchSize, Sort = sort});
         }
     }
 }

@@ -37,17 +37,17 @@ namespace EverStore
         {
             if (@event == null)
             {
-                throw new ArgumentException("Event is null", nameof(@event));
+                throw new ArgumentException($"{nameof(@event)} is null", nameof(@event));
             }
 
             if (@event.Data == null || @event.Data.Length == 0)
             {
-                throw new ArgumentException("Event is null", nameof(@event));
+                throw new ArgumentException($"{nameof(@event)} is null", nameof(@event));
             }
 
             if (expectedStreamVersion < 0)
             {
-                throw new ArgumentException("ExpectedStreamVersion cannot be below 0", nameof(@event));
+                throw new ArgumentException($"{nameof(expectedStreamVersion)} cannot be below 0", nameof(expectedStreamVersion));
             }
 
             Stream.Parse(stream, out string streamAggregate, out string streamId);
@@ -62,9 +62,26 @@ namespace EverStore
             return persistedEvent.ToDto();
         }
 
-        public Task<ReadEvents> ReadStreamEventsForwardAsync(string stream, long start, int count)
+        public async Task<ReadEvents> ReadStreamEventsForwardAsync(string stream, long start, int batchSize)
         {
-            throw new NotImplementedException();
+            if (start < 0)
+            {
+                throw new ArgumentException($"{nameof(start)} cannot be below 0", nameof(start));
+            }
+            
+            if (batchSize < 1)
+            {
+                throw new ArgumentException($"{nameof(batchSize)} cannot be below 1", nameof(batchSize));
+            }
+
+            if (string.IsNullOrWhiteSpace(stream))
+            {
+                throw new ArgumentException($"{nameof(stream)} cannot be empty", nameof(stream));
+            }
+
+            var persistedEvents = await _eventRepository.ReadEventsForwards(stream, start, batchSize);
+
+            return new ReadEvents(persistedEvents);
         }
 
         public void SubscribeToStreamFrom(string stream, long? lastCheckpoint, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null,

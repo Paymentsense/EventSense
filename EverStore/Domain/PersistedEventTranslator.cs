@@ -11,7 +11,8 @@ namespace EverStore.Domain
                 GlobalVersion = globalVersion,
                 Stream = stream,
                 StreamVersion = expectedStreamVersion,
-                Data = @event.Data
+                Data = @event.Data,
+                CreatedAt = @event.CreatedAt
             };
         }
 
@@ -22,7 +23,8 @@ namespace EverStore.Domain
                 Data = @event.Data,
                 GlobalVersion = @event.GlobalVersion,
                 Stream = @event.Stream,
-                StreamVersion = @event.StreamVersion
+                StreamVersion = @event.StreamVersion,
+                CreatedAt = @event.CreatedAt
             };
         }
     }

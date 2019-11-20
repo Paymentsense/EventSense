@@ -70,5 +70,45 @@ namespace EverStore.Integration.Tests.Storage
             };
             Assert.Throws<MongoWriteException>(() => repo.AppendEvent(secondEvent));
         }
+
+        [Fact]
+        public async void ReadEventsForwards()
+        {
+            var secondExpectedEvent = new PersistedEvent
+            {
+                GlobalVersion = 2,
+                Stream = "contact_1234",
+                StreamVersion = 2,
+                CreatedAt = DateTimeOffset.Now
+            };
+            _mongoFixture.MongoContext.Collection<PersistedEvent>().InsertOne(secondExpectedEvent);
+
+            var firstExpectedEvent = new PersistedEvent
+            {
+                GlobalVersion = 1,
+                Stream = "contact_1234",
+                StreamVersion = 1,
+                CreatedAt = DateTimeOffset.Now
+            };
+            _mongoFixture.MongoContext.Collection<PersistedEvent>().InsertOne(firstExpectedEvent);
+
+            var repo = new EventRepository(_mongoFixture.MongoContext);
+
+            var eventCursor = await repo.ReadEventsForwards("contact_1234", 0, 1);
+
+            eventCursor.MoveNext();
+
+            var firstActualEvent = eventCursor.Current.SingleOrDefault();
+            Assert.NotNull(firstActualEvent);
+            Assert.Equal(firstExpectedEvent.GlobalVersion, firstActualEvent.GlobalVersion);
+            Assert.Equal(firstExpectedEvent.Stream, firstActualEvent.Stream);
+
+            eventCursor.MoveNext();
+
+            var secondActualEvent = eventCursor.Current.SingleOrDefault();
+            Assert.NotNull(secondActualEvent);
+            Assert.Equal(secondExpectedEvent.GlobalVersion, secondActualEvent.GlobalVersion);
+            Assert.Equal(secondExpectedEvent.Stream, secondActualEvent.Stream);
+        }
     }
 }

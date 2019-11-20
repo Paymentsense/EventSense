@@ -1,9 +1,30 @@
-﻿namespace EverStore.Contract
+﻿using System;
+using System.Linq;
+using EverStore.Domain;
+using MongoDB.Driver;
+
+namespace EverStore.Contract
 {
-    public class ReadEvents
+    public class ReadEvents: IDisposable
     {
-        public ResolvedEvent[] Events { get; set; }
-        public bool IsEndOfStream { get; set; }
-        public long NextEventNumber { get; set; }
+        private IAsyncCursor<PersistedEvent> _persistedEventCursor;
+
+        internal ReadEvents(IAsyncCursor<PersistedEvent> persistedEventCursor)
+        {
+            _persistedEventCursor = persistedEventCursor;
+        }
+
+        public IOrderedEnumerable<ResolvedEvent> Events => _persistedEventCursor.Current.Select(e => e.ToDto()).OrderBy(e => e.GlobalVersion);
+
+        public bool MoveNext()
+        {
+            return _persistedEventCursor.MoveNext();
+        }
+
+        public void Dispose()
+        {
+            _persistedEventCursor?.Dispose();
+            _persistedEventCursor = null;
+        }
     }
 }

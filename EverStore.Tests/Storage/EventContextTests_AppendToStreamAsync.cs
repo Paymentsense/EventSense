@@ -4,27 +4,15 @@ using EverStore.Contract;
 using EverStore.Domain;
 using EverStore.Messaging;
 using EverStore.Storage;
-using MongoDB.Driver;
 using NSubstitute;
-using NSubstitute.ReceivedExtensions;
-using OpenTracing.Mock;
 using Xunit;
 
 namespace EverStore.Tests
 {
-    public class EventContextTests
+    public class EventContextTests_AppendToStreamAsync
     {
         private const string ValidEventData = "Valid Event";
-        private readonly Event _validEvent = new Event { Data = Encoding.UTF8.GetBytes(ValidEventData) };
-
-        [Fact]
-        public void CreatesContext()
-        {
-            var mongoClient = Substitute.For<IMongoClient>();
-            var context = EventContext.Create("projectId", "EventStorage", mongoClient, new MockTracer());
-
-            Assert.NotNull(context);
-        }
+        private readonly Event _validEvent = new Event {Data = Encoding.UTF8.GetBytes(ValidEventData)};
 
         [Fact]
         public async void AppendToStreamAsync_StreamIsValid()
