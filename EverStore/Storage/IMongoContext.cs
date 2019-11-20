@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 
-namespace EverStore
+namespace EverStore.Storage
 {
     internal interface IMongoContext
     {

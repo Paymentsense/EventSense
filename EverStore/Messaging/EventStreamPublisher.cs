@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
-using EverStore.Model;
+using EverStore.Domain;
 using EverStore.Tracing;
 using Google.Cloud.PubSub.V1;
 using Google.Protobuf;

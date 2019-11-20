@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using EverStore.Model;
+using EverStore.Domain;
 
 namespace EverStore.Messaging
 {

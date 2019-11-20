@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
+using EverStore.Domain;
 using EverStore.Messaging;
-using EverStore.Model;
 using Google.Cloud.PubSub.V1;
 using NSubstitute;
 using OpenTracing;
@@ -18,9 +18,7 @@ namespace EverStore.Tests
             var pubSubPublisherFactory = Substitute.For<IPubSubPublisherFactory>();
             var publisherClient = Substitute.For<PublisherClient>();
             PubsubMessage message = null;
-#pragma warning disable 4014
-            publisherClient.PublishAsync(Arg.Do<PubsubMessage>(m => message = m));
-#pragma warning restore 4014 
+            await publisherClient.PublishAsync(Arg.Do<PubsubMessage>(m => message = m));
 
             pubSubPublisherFactory.CreateAsync(default).ReturnsForAnyArgs(Task.FromResult(publisherClient));
 

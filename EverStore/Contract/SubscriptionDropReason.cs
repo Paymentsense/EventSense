@@ -1,4 +1,4 @@
-﻿namespace EverStore
+﻿namespace EverStore.Contract
 {
     public enum SubscriptionDropReason
     {
