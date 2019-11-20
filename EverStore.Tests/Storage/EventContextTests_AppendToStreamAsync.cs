@@ -7,7 +7,7 @@ using EverStore.Storage;
 using NSubstitute;
 using Xunit;
 
-namespace EverStore.Tests
+namespace EverStore.Tests.Storage
 {
     public class EventContextTests_AppendToStreamAsync
     {

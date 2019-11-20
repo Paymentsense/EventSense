@@ -11,11 +11,11 @@ namespace EverStore.Messaging
 
     internal class EventStreamPublisher : IEventStreamPublisher
     {
-        private readonly TopicFactory _topicFactory;
+        private readonly ITopicFactory _topicFactory;
         private readonly ITracer _tracer;
         private readonly IPubSubPublisherFactory _pubSubPublisherFactory;
 
-        public EventStreamPublisher(TopicFactory topicFactory, ITracer tracer, IPubSubPublisherFactory pubSubPublisherFactory )
+        public EventStreamPublisher(ITopicFactory topicFactory, ITracer tracer, IPubSubPublisherFactory pubSubPublisherFactory )
         {
             _topicFactory = topicFactory;
             _tracer = tracer;
@@ -24,7 +24,7 @@ namespace EverStore.Messaging
 
         public async Task<string> Publish(PersistedEvent @event, string stream, string streamAggregate, string streamId)
         {
-            var topicName = _topicFactory.Create(streamAggregate);
+            var topicName = await _topicFactory.CreateAsync(streamAggregate);
             var publisher = await _pubSubPublisherFactory.CreateAsync(topicName);
 
             var publisherSpan = _tracer?.CreateSpan(Encoding.UTF8.GetString(@event.Data), topicName.TopicId);

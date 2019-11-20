@@ -8,7 +8,7 @@ using OpenTracing;
 using OpenTracing.Propagation;
 using Xunit;
 
-namespace EverStore.Tests
+namespace EverStore.Tests.Messaging
 {
     public class EventStreamPublisherTests
     {
@@ -17,12 +17,14 @@ namespace EverStore.Tests
         {
             var pubSubPublisherFactory = Substitute.For<IPubSubPublisherFactory>();
             var publisherClient = Substitute.For<PublisherClient>();
+            var topicFactory = Substitute.For<ITopicFactory>();
+            topicFactory.CreateAsync(Arg.Any<string>()).Returns(new TopicName("project", "topic"));
             PubsubMessage message = null;
             await publisherClient.PublishAsync(Arg.Do<PubsubMessage>(m => message = m));
 
             pubSubPublisherFactory.CreateAsync(default).ReturnsForAnyArgs(Task.FromResult(publisherClient));
-
-            var publisher = new EventStreamPublisher(new TopicFactory("projectId"), null, pubSubPublisherFactory);
+            
+            var publisher = new EventStreamPublisher(topicFactory, null, pubSubPublisherFactory);
 
             var persistedEvent = new PersistedEvent {Data = Encoding.UTF8.GetBytes("event")};
 
@@ -41,16 +43,17 @@ namespace EverStore.Tests
         {
             var pubSubPublisherFactory = Substitute.For<IPubSubPublisherFactory>();
             var publisherClient = Substitute.For<PublisherClient>();
+            var topicFactory = Substitute.For<ITopicFactory>();
+            topicFactory.CreateAsync(Arg.Any<string>()).Returns(new TopicName("project", "topic"));
             PubsubMessage message = null;
-#pragma warning disable 4014
-            publisherClient.PublishAsync(Arg.Do<PubsubMessage>(m => message = m));
-#pragma warning restore 4014 
+
+            await publisherClient.PublishAsync(Arg.Do<PubsubMessage>(m => message = m));
 
             pubSubPublisherFactory.CreateAsync(default).ReturnsForAnyArgs(Task.FromResult(publisherClient));
 
             var tracer = Substitute.For<ITracer>();
             tracer.Inject(Arg.Any<ISpanContext>(), Arg.Any<IFormat<ITextMap>>(), Arg.Do<TextMapInjectAdapter>(a => a.Set("tracer", "trace this")));
-            var publisher = new EventStreamPublisher(new TopicFactory("projectId"), tracer, pubSubPublisherFactory);
+            var publisher = new EventStreamPublisher(topicFactory, tracer, pubSubPublisherFactory);
 
             var persistedEvent = new PersistedEvent {Data = Encoding.UTF8.GetBytes("event")};
 

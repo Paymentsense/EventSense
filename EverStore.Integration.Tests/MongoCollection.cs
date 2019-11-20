@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace EverStore.Integration.Tests.Storage
+namespace EverStore.Integration.Tests
 {
     [CollectionDefinition("MongoCollection")]
     public class MongoCollection : ICollectionFixture<MongoFixture>
