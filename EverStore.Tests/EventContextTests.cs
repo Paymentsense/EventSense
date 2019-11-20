@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using NSubstitute;
+using OpenTracing.Mock;
 using Xunit;
 
 namespace EverStore.Tests
@@ -13,7 +11,7 @@ namespace EverStore.Tests
         public void CreatesContext()
         {
             var mongoClient = Substitute.For<IMongoClient>();
-            var context = EventContext.Create("EventStorage", mongoClient);
+            var context = EventContext.Create("projectId", "EventStorage", mongoClient, new MockTracer());
 
             Assert.NotNull(context);
         }

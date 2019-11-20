@@ -1,22 +1,28 @@
 ﻿using System;
 using System.Threading.Tasks;
+using EverStore.Messaging;
 using MongoDB.Driver;
+using OpenTracing;
 
 namespace EverStore
 {
-    internal class EventContext : IEventContext
+    public class EventContext : IEventContext
     {
         private readonly IMongoContext _mongoContext;
+        private readonly IEventStreamPublisher _eventStreamPublisher;
 
-        private EventContext(IMongoContext mongoContext)
+        private EventContext(IMongoContext mongoContext, IEventStreamPublisher eventStreamPublisher)
         {
             _mongoContext = mongoContext;
+            _eventStreamPublisher = eventStreamPublisher;
         }
 
-        public static IEventContext Create(string eventStorageName, IMongoClient mongoClient)
+        public static IEventContext Create(string gcpProjectId, string eventStorageName, IMongoClient mongoClient, ITracer tracer = null)
         {
+            var pubSubPublisherFactory = new PubSubPublisherFactory();
+            var publisher = new EventStreamPublisher(new TopicFactory(gcpProjectId), tracer, pubSubPublisherFactory);
             var mongoContext = MongoContext.Create(eventStorageName, mongoClient);
-            return new EventContext(mongoContext);
+            return new EventContext(mongoContext, publisher);
         }
 
         public Task<WrittenEvent> AppendToStreamAsync(string stream, long expectedVersion, Event @event)
