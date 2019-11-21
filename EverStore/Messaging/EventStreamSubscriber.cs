@@ -13,13 +13,15 @@ namespace EverStore.Messaging
     {
         private readonly SubscriberClient.Settings _subscriptionSettings;
         private readonly IEventStreamHandler _eventStreamHandler;
+        private readonly IEventSequencer _eventSequencer;
         private readonly ITracer _tracer;
         private SubscriberClient _subscriber;
 
-        public EventStreamSubscriber(SubscriberClient.Settings subscriptionSettings, IEventStreamHandler eventStreamHandler, ITracer tracer)
+        public EventStreamSubscriber(SubscriberClient.Settings subscriptionSettings, IEventStreamHandler eventStreamHandler, IEventSequencer eventSequencer, ITracer tracer)
         {
             _subscriptionSettings = subscriptionSettings;
             _eventStreamHandler = eventStreamHandler;
+            _eventSequencer = eventSequencer;
             _tracer = tracer;
         }
         public async Task SubscribeAsync(EventStreamSubscription subscription,
@@ -27,6 +29,7 @@ namespace EverStore.Messaging
             Action<CatchUpSubscription> liveProcessingStarted = null,
             Action<CatchUpSubscription, Exception> subscriptionDropped = null)
         {
+            _eventSequencer.Initialise(subscription.NextEventVersion);
             _subscriber = await SubscriberClient.CreateAsync(subscription.SubscriptionName, settings: _subscriptionSettings);
 
 #pragma warning disable 4014

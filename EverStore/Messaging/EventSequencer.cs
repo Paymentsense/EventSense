@@ -5,43 +5,35 @@ namespace EverStore.Messaging
 {
     internal class EventSequencer : IEventSequencer
     {
-        private long _currentSequence = -1;
+        private const long StartingSequence = -1;
+        private long _currentSequence = StartingSequence;
 
-        public EventSequence GetEventSequence(PersistedEvent @event, long lastCheckpoint, bool hasSubscribedToAllStream)
+        public void Initialise(long lastCheckpoint)
+        {
+            Interlocked.CompareExchange(ref _currentSequence, lastCheckpoint, StartingSequence);
+        }
+
+        public EventSequence GetEventSequence(PersistedEvent @event, bool hasSubscribedToAllStream)
         {
             var currentSequence = Interlocked.Read(ref _currentSequence);
-
-            var isFirstEventSequence = currentSequence == -1;
-            var sequenceToCompare = isFirstEventSequence ? lastCheckpoint : currentSequence;
-
+            
             if (hasSubscribedToAllStream)
             {
-                return new EventSequence(isInSequence: @event.GlobalVersion != sequenceToCompare, isInPast: @event.GlobalVersion < sequenceToCompare);
+                return new EventSequence(
+                    isInSequence:@event.GlobalVersion == currentSequence,
+                    isInPast:@event.GlobalVersion < currentSequence, 
+                    currentSequence == StartingSequence);
             }
 
-            return new EventSequence(isInSequence: @event.StreamVersion != sequenceToCompare, isInPast: @event.StreamVersion < sequenceToCompare);
+            return new EventSequence(
+                isInSequence: @event.StreamVersion == currentSequence,
+                isInPast: @event.StreamVersion < currentSequence,
+                currentSequence == StartingSequence);
         }
 
         public void IncrementEventSequence()
         {
             Interlocked.Increment(ref _currentSequence);
         }
-
-        public bool IsFirstEvent()
-        {
-            var currentSequence = Interlocked.Read(ref _currentSequence);
-            return currentSequence == -1;
-        }
-    }
-
-    internal class EventSequence
-    {
-        public EventSequence(bool isInSequence, bool isInPast)
-        {
-            IsInSequence = isInSequence;
-            IsInPast = isInPast;
-        }
-        public bool IsInSequence { get; }
-        public bool IsInPast { get; }
     }
 }

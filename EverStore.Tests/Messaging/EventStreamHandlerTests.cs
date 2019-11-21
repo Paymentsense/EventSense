@@ -19,8 +19,8 @@ namespace EverStore.Tests.Messaging
             var eventStreamSubscription = new EventStreamSubscription(null, catchUpSubscription, 1, null,false);
 
             var eventSequencer = Substitute.For<IEventSequencer>();
-            var eventSequence = new EventSequence(isInSequence:true, isInPast: false);
-            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), 1, Arg.Any<bool>()).Returns(eventSequence);
+            var eventSequence = new EventSequence(isInSequence: true, isInPast: false, isFirstEvent:false);
+            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), Arg.Any<bool>()).Returns(eventSequence);
             var handler = new EventStreamHandler(eventSequencer);
 
             Tuple<CatchUpSubscription, ResolvedEvent> eventAppeared = null;
@@ -45,8 +45,8 @@ namespace EverStore.Tests.Messaging
             var eventStreamSubscription = new EventStreamSubscription(null, catchUpSubscription, 1, null,false);
 
             var eventSequencer = Substitute.For<IEventSequencer>();
-            var eventSequence = new EventSequence(isInSequence:false, isInPast: false);
-            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), 1, Arg.Any<bool>()).Returns(eventSequence);
+            var eventSequence = new EventSequence(isInSequence: false, isInPast: false, isFirstEvent: false);
+            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), Arg.Any<bool>()).Returns(eventSequence);
             var handler = new EventStreamHandler(eventSequencer);
 
             Tuple<CatchUpSubscription, ResolvedEvent> eventAppeared = null;
@@ -69,8 +69,8 @@ namespace EverStore.Tests.Messaging
             var eventStreamSubscription = new EventStreamSubscription(null, catchUpSubscription, 1, null,false);
 
             var eventSequencer = Substitute.For<IEventSequencer>();
-            var eventSequence = new EventSequence(isInSequence:false, isInPast: true);
-            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), 1, Arg.Any<bool>()).Returns(eventSequence);
+            var eventSequence = new EventSequence(isInSequence: false, isInPast: true, isFirstEvent: false);
+            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), Arg.Any<bool>()).Returns(eventSequence);
             var handler = new EventStreamHandler(eventSequencer);
 
             Tuple<CatchUpSubscription, ResolvedEvent> eventAppeared = null;
@@ -92,9 +92,8 @@ namespace EverStore.Tests.Messaging
             var eventStreamSubscription = new EventStreamSubscription(null, catchUpSubscription, 1, null, false);
 
             var eventSequencer = Substitute.For<IEventSequencer>();
-            var eventSequence = new EventSequence(isInSequence: true, isInPast: false);
-            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), 1, Arg.Any<bool>()).Returns(eventSequence);
-            eventSequencer.IsFirstEvent().Returns(true);
+            var eventSequence = new EventSequence(isInSequence: true, isInPast: false, isFirstEvent: true);
+            eventSequencer.GetEventSequence(Arg.Any<PersistedEvent>(), Arg.Any<bool>()).Returns(eventSequence);
 
             var handler = new EventStreamHandler(eventSequencer);
 

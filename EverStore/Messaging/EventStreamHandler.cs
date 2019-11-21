@@ -16,7 +16,7 @@ namespace EverStore.Messaging
 
         public SubscriberClient.Reply Handle(PersistedEvent @event, EventStreamSubscription subscription, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null)
         {
-            var eventSequence = _eventSequencer.GetEventSequence(@event, subscription.NextEventVersion, subscription.HasSubscribeToAllStream);
+            var eventSequence = _eventSequencer.GetEventSequence(@event, subscription.HasSubscribeToAllStream);
             if (!eventSequence.IsInSequence)
             {
                 if (eventSequence.IsInPast)
@@ -27,7 +27,7 @@ namespace EverStore.Messaging
                 return SubscriberClient.Reply.Nack;
             }
 
-            if (_eventSequencer.IsFirstEvent())
+            if (eventSequence.IsFirstEvent)
             {
                 liveProcessingStarted?.Invoke(subscription.CatchUpSubscription);
             }

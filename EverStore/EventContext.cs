@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using EverStore.Contract;
 using EverStore.Domain;
@@ -42,7 +41,7 @@ namespace EverStore
 
             var eventSequencer = new EventSequencer();
             var eventStreamHandler = new EventStreamHandler(eventSequencer);
-            var eventStreamSubscriber = new EventStreamSubscriber(new SubscriberClient.Settings(), eventStreamHandler, tracer);
+            var eventStreamSubscriber = new EventStreamSubscriber(new SubscriberClient.Settings(), eventStreamHandler, eventSequencer, tracer);
             var subscriptionFactory = new SubscriptionCreation(gcpProjectId);
             var streamSubscriptionFactory = new Messaging.EventStreamSubscriptionCreation(topicCreation, subscriptionFactory, conventionIdFactory );
 
