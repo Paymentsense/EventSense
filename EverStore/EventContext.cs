@@ -4,6 +4,7 @@ using EverStore.Contract;
 using EverStore.Domain;
 using EverStore.Messaging;
 using EverStore.Storage;
+using Google.Api.Gax;
 using Google.Cloud.PubSub.V1;
 using MongoDB.Driver;
 using OpenTracing;
@@ -27,21 +28,26 @@ namespace EverStore
             _eventStreamSubscriptionCreation = eventStreamSubscriptionCreation;
         }
 
-        public static IEventContext Create(string gcpProjectId, string eventStorageName, IMongoClient mongoClient, ITracer tracer = null)
+        public static IEventContext Create(EventContextSettings settings, IMongoClient mongoClient, ITracer tracer = null, SubscriberClient.Settings subscriptionSettings = null)
         {
             var pubSubPublisherFactory = new PublisherFactory();
-            var topicCreation = new TopicCreation(gcpProjectId);
-            var conventionIdFactory = new ConventionIdFactory("", "", "");
+            var topicCreation = new TopicCreation(settings.GcpProjectId);
+            var conventionIdFactory = new ConventionIdFactory(settings.SubscriptionTopicPrefix, settings.SubscriptionTopicPostfix,settings.SubscriptionIdentifier);
             var eventPublisher = new EventStreamPublisher(topicCreation, tracer, pubSubPublisherFactory, conventionIdFactory);
 
             MongoContext.RegisterSerializerOptions();
-            var mongoContext = MongoContext.CreateAsync(eventStorageName, mongoClient).GetAwaiter().GetResult();
+            var mongoContext = MongoContext.CreateAsync(settings.EventStorageName, mongoClient).GetAwaiter().GetResult();
             var versionRepository = new VersionRepository(mongoContext);
             var eventRepository = new EventRepository(mongoContext);
 
-            var eventStreamSubscriber = new EventStreamSubscriber(new SubscriberClient.Settings(), tracer);
-            var subscriptionFactory = new SubscriptionCreation(gcpProjectId);
-            var streamSubscriptionFactory = new Messaging.EventStreamSubscriptionCreation(topicCreation, subscriptionFactory, conventionIdFactory );
+            subscriptionSettings = subscriptionSettings ?? new SubscriberClient.Settings
+            {
+                AckDeadline = TimeSpan.FromSeconds(20),
+                FlowControlSettings = new FlowControlSettings(maxOutstandingElementCount: 1000, maxOutstandingByteCount: null)
+            };
+            var eventStreamSubscriber = new EventStreamSubscriber(subscriptionSettings, tracer);
+            var subscriptionFactory = new SubscriptionCreation(settings.GcpProjectId);
+            var streamSubscriptionFactory = new Messaging.EventStreamSubscriptionCreation(topicCreation, subscriptionFactory, conventionIdFactory);
 
             return new EventContext(eventStreamSubscriber, eventPublisher, versionRepository, eventRepository, streamSubscriptionFactory);
         }

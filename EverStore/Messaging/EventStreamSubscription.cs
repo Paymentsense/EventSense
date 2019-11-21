@@ -1,7 +1,7 @@
 ﻿using EverStore.Contract;
 using Google.Cloud.PubSub.V1;
 
-namespace EverStore
+namespace EverStore.Messaging
 {
     internal class EventStreamSubscription
     {
