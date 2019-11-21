@@ -29,7 +29,7 @@ namespace EverStore
 
         public static IEventContext Create(string gcpProjectId, string eventStorageName, IMongoClient mongoClient, ITracer tracer = null)
         {
-            var pubSubPublisherFactory = new PubSubPublisherFactory();
+            var pubSubPublisherFactory = new PublisherFactory();
             var topicCreation = new TopicCreation(gcpProjectId);
             var conventionIdFactory = new ConventionIdFactory("", "", "");
             var eventPublisher = new EventStreamPublisher(topicCreation, tracer, pubSubPublisherFactory, conventionIdFactory);
@@ -131,11 +131,11 @@ namespace EverStore
             IAsyncCursor<PersistedEvent> eventCursor;
             if (hasSubscribeToAllStream)
             {
-                eventCursor = await _eventRepository.ReadAllEventsForwards(nextEventVersion, 200);
+                eventCursor = await _eventRepository.ReadAllEventsForwards(nextEventVersion, batchSize:200);
             }
             else
             {
-                eventCursor = await _eventRepository.ReadEventsForwards(stream, nextEventVersion, 200);
+                eventCursor = await _eventRepository.ReadEventsForwards(stream, nextEventVersion, batchSize:200);
             }
 
             var catchUpSubscription = new CatchUpSubscription(stream, subscription.SubscriptionId);

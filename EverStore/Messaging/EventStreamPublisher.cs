@@ -13,14 +13,14 @@ namespace EverStore.Messaging
     {
         private readonly ITopicCreation _topicCreation;
         private readonly ITracer _tracer;
-        private readonly IPubSubPublisherFactory _pubSubPublisherFactory;
+        private readonly IPublisherFactory _publisherFactory;
         private readonly IConventionIdFactory _conventionIdFactory;
 
-        public EventStreamPublisher(ITopicCreation topicCreation, ITracer tracer, IPubSubPublisherFactory pubSubPublisherFactory, IConventionIdFactory conventionIdFactory)
+        public EventStreamPublisher(ITopicCreation topicCreation, ITracer tracer, IPublisherFactory publisherFactory, IConventionIdFactory conventionIdFactory)
         {
             _topicCreation = topicCreation;
             _tracer = tracer;
-            _pubSubPublisherFactory = pubSubPublisherFactory;
+            _publisherFactory = publisherFactory;
             _conventionIdFactory = conventionIdFactory;
         }
 
@@ -28,7 +28,7 @@ namespace EverStore.Messaging
         {
             var topicId = _conventionIdFactory.GetTopicId(streamAggregate);
             var topicName = await _topicCreation.CreateAsync(topicId);
-            var publisher = await _pubSubPublisherFactory.CreateAsync(topicName);
+            var publisher = await _publisherFactory.CreateAsync(topicName);
 
             var publisherSpan = _tracer?.CreateSpan(Encoding.UTF8.GetString(@event.Data), topicName.TopicId);
             try

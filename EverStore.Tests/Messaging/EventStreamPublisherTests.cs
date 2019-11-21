@@ -16,7 +16,7 @@ namespace EverStore.Tests.Messaging
         [Fact]
         public async void PublishesEventWithAttributes()
         {
-            var pubSubPublisherFactory = Substitute.For<IPubSubPublisherFactory>();
+            var pubSubPublisherFactory = Substitute.For<IPublisherFactory>();
             var publisherClient = Substitute.For<PublisherClient>();
             var conventionIdFactory = Substitute.For<IConventionIdFactory>();
             var topicCreation = Substitute.For<ITopicCreation>();
@@ -53,7 +53,7 @@ namespace EverStore.Tests.Messaging
         [Fact]
         public async void PublishesEventWithTracingAttributes()
         {
-            var pubSubPublisherFactory = Substitute.For<IPubSubPublisherFactory>();
+            var pubSubPublisherFactory = Substitute.For<IPublisherFactory>();
             var publisherClient = Substitute.For<PublisherClient>();
             var topicFactory = Substitute.For<ITopicCreation>();
             var conventionIdFactory = Substitute.For<IConventionIdFactory>();

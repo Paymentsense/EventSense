@@ -3,7 +3,7 @@ using Google.Cloud.PubSub.V1;
 
 namespace EverStore.Messaging
 {
-    internal class PubSubPublisherFactory: IPubSubPublisherFactory
+    internal class PublisherFactory: IPublisherFactory
     {
         public async Task<PublisherClient> CreateAsync(TopicName topicName)
         {
