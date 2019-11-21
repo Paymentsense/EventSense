@@ -3,7 +3,7 @@ using Google.Cloud.PubSub.V1;
 
 namespace EverStore.Messaging
 {
-    internal interface IEventStreamSubscription
+    internal interface IEventStreamSubscriptionCreation
     {
         Task<SubscriptionName> CreateSubscriptionAsync(string streamAggregate);
     }

@@ -1,28 +1,27 @@
-﻿using System.Threading.Tasks;
+﻿using EverStore.Contract;
 using Google.Cloud.PubSub.V1;
 
-namespace EverStore.Messaging
+namespace EverStore
 {
-    internal class EventStreamSubscription: IEventStreamSubscription
+    internal class EventStreamSubscription
     {
-        private readonly ITopicCreation _topicCreation;
-        private readonly ISubscriptionCreation _subscriptionCreation;
-        private readonly IConventionIdFactory _conventionIdFactory;
+        public string Stream { get; }
+        public CatchUpSubscription CatchUpSubscription { get; }
+        public long NextEventVersion { get; }
+        public SubscriptionName SubscriptionName { get; }
+        public bool HasSubscribeToAllStream { get; }
 
-        public EventStreamSubscription(ITopicCreation topicCreation, ISubscriptionCreation subscriptionCreation, IConventionIdFactory conventionIdFactory)
+        public EventStreamSubscription(string stream, 
+            CatchUpSubscription catchUpSubscription, 
+            long nextEventVersion, 
+            SubscriptionName subscriptionName, 
+            bool hasSubscribeToAllStream)
         {
-            _topicCreation = topicCreation;
-            _subscriptionCreation = subscriptionCreation;
-            _conventionIdFactory = conventionIdFactory;
-        }
-
-        public async Task<SubscriptionName> CreateSubscriptionAsync(string streamAggregate)
-        {
-            var topicId = _conventionIdFactory.GetTopicId(streamAggregate);
-            await _topicCreation.CreateAsync(topicId);
-
-            var subscriptionId = _conventionIdFactory.GetSubscriptionId(streamAggregate);
-            return await _subscriptionCreation.CreateAsync(subscriptionId, topicId);
+            Stream = stream;
+            CatchUpSubscription = catchUpSubscription;
+            NextEventVersion = nextEventVersion;
+            SubscriptionName = subscriptionName;
+            HasSubscribeToAllStream = hasSubscribeToAllStream;
         }
     }
 }

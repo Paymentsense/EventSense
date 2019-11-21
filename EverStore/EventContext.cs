@@ -17,15 +17,15 @@ namespace EverStore
         private readonly IEventStreamPublisher _eventStreamPublisher;
         private readonly IVersionRepository _versionRepository;
         private readonly IEventRepository _eventRepository;
-        private readonly IEventStreamSubscription _eventStreamSubscription;
+        private readonly IEventStreamSubscriptionCreation _eventStreamSubscriptionCreation;
 
-        internal EventContext(IEventStreamSubscriber eventStreamSubscriber, IEventStreamPublisher eventStreamPublisher, IVersionRepository versionRepository, IEventRepository eventRepository, IEventStreamSubscription eventStreamSubscription)
+        internal EventContext(IEventStreamSubscriber eventStreamSubscriber, IEventStreamPublisher eventStreamPublisher, IVersionRepository versionRepository, IEventRepository eventRepository, IEventStreamSubscriptionCreation eventStreamSubscriptionCreation)
         {
             _eventStreamSubscriber = eventStreamSubscriber;
             _eventStreamPublisher = eventStreamPublisher;
             _versionRepository = versionRepository;
             _eventRepository = eventRepository;
-            _eventStreamSubscription = eventStreamSubscription;
+            _eventStreamSubscriptionCreation = eventStreamSubscriptionCreation;
         }
 
         public static IEventContext Create(string gcpProjectId, string eventStorageName, IMongoClient mongoClient, ITracer tracer = null)
@@ -41,9 +41,10 @@ namespace EverStore
             var eventRepository = new EventRepository(mongoContext);
 
             var eventSequencer = new EventSequencer();
-            var eventStreamSubscriber = new EventStreamSubscriber(new SubscriberClient.Settings(), eventSequencer, tracer);
+            var eventStreamHandler = new EventStreamHandler(eventSequencer);
+            var eventStreamSubscriber = new EventStreamSubscriber(new SubscriberClient.Settings(), eventStreamHandler, tracer);
             var subscriptionFactory = new SubscriptionCreation(gcpProjectId);
-            var streamSubscriptionFactory = new EventStreamSubscription(topicCreation, subscriptionFactory, conventionIdFactory );
+            var streamSubscriptionFactory = new Messaging.EventStreamSubscriptionCreation(topicCreation, subscriptionFactory, conventionIdFactory );
 
             return new EventContext(eventStreamSubscriber, eventPublisher, versionRepository, eventRepository, streamSubscriptionFactory);
         }
@@ -127,7 +128,7 @@ namespace EverStore
                 Stream.Parse(stream, out streamAggregate, out string _);
             }
 
-            var subscription = await _eventStreamSubscription.CreateSubscriptionAsync(streamAggregate);
+            var subscription = await _eventStreamSubscriptionCreation.CreateSubscriptionAsync(streamAggregate);
 
             var nextEventVersion = lastCheckpoint ?? 0;
             IAsyncCursor<PersistedEvent> eventCursor;
@@ -151,7 +152,10 @@ namespace EverStore
                 }
             }
             nextEventVersion++;
-            await _eventStreamSubscriber.SubscribeAsync(stream, catchUpSubscription, nextEventVersion, subscription, eventAppeared, liveProcessingStarted, subscriptionDropped);
+
+            var eventStreamSubscription = new EventStreamSubscription(stream, catchUpSubscription, nextEventVersion, subscription, hasSubscribeToAllStream);
+
+            await _eventStreamSubscriber.SubscribeAsync(eventStreamSubscription, eventAppeared, liveProcessingStarted, subscriptionDropped);
         }
     }
 }

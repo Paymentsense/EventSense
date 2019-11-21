@@ -5,7 +5,7 @@ using Xunit;
 
 namespace EverStore.Tests.Messaging
 {
-    public class EventStreamSubscriptionTests
+    public class EventStreamSubscriptionCreationTests
     {
         [Fact]
         public async void CreatesTopicsAndSubscription()
@@ -19,7 +19,7 @@ namespace EverStore.Tests.Messaging
             conventionIdFactory.GetSubscriptionId(Arg.Any<string>()).Returns("subscriptionId");
             conventionIdFactory.GetTopicId(Arg.Any<string>()).Returns("topicId");
 
-            var eventStreamSubscription = new EventStreamSubscription(topicCreation, subscriptionCreation, conventionIdFactory);
+            var eventStreamSubscription = new EverStore.Messaging.EventStreamSubscriptionCreation(topicCreation, subscriptionCreation, conventionIdFactory);
 
             //Act
             var subscription = await eventStreamSubscription.CreateSubscriptionAsync("stream");

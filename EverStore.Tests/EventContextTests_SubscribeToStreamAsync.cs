@@ -47,7 +47,7 @@ namespace EverStore.Tests
         public async void SubscribeToStreamAsync_SubscribesToTheAllStream()
         {
             //Arrange
-            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscription>();
+            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscriptionCreation>();
             streamSubscriptionFactory.CreateSubscriptionAsync(Stream.All).Returns(new SubscriptionName("projectId", "subscriptionId"));
             
             var eventRepository = Substitute.For<IEventRepository>();
@@ -68,10 +68,11 @@ namespace EverStore.Tests
             await eventContext.SubscribeToStreamAsync(Stream.All, null, (c,e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
 
             //Assert
-            await eventStreamSubscriber.Received().SubscribeAsync(Stream.All,
-                Arg.Any<CatchUpSubscription>(),
-                3,
-                Arg.Any<SubscriptionName>(),
+            await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
+                {
+                    Assert.Equal(Stream.All, s.Stream);
+                    Assert.Equal(3, s.NextEventVersion);
+                }),
                 Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
@@ -84,36 +85,37 @@ namespace EverStore.Tests
             Assert.Equal("subscriptionId", actualEvents[1].Item1.SubscriptionId);
             Assert.Equal(2, actualEvents[1].Item2.GlobalVersion);
         }
-        
+
         [Fact]
         public async void SubscribeToStreamAsync_SubscribesToTheAllStream_WithLastCheckpoint()
         {
             //Arrange
-            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscription>();
+            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscriptionCreation>();
             streamSubscriptionFactory.CreateSubscriptionAsync(Stream.All).Returns(new SubscriptionName("projectId", "subscriptionId"));
-            
+
             var eventRepository = Substitute.For<IEventRepository>();
             var readEvents = Substitute.For<IAsyncCursor<PersistedEvent>>();
             readEvents.MoveNext().Returns(true, true, false);
-            readEvents.Current.Returns(new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 5}},
-                                       new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 6}});
+            readEvents.Current.Returns(new List<PersistedEvent>() { new PersistedEvent { GlobalVersion = 5 } },
+                                       new List<PersistedEvent>() { new PersistedEvent { GlobalVersion = 6 } });
 
             eventRepository.ReadAllEventsForwards(5, Arg.Any<int>()).Returns(readEvents);
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
             var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
-            
+
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
             //Act
-            await eventContext.SubscribeToStreamAsync(Stream.All, 5, (c,e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
+            await eventContext.SubscribeToStreamAsync(Stream.All, 5, (c, e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
 
             //Assert
-            await eventStreamSubscriber.Received().SubscribeAsync(Stream.All,
-                Arg.Any<CatchUpSubscription>(),
-                7,
-                Arg.Any<SubscriptionName>(),
+            await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
+                {
+                    Assert.Equal(Stream.All, s.Stream);
+                    Assert.Equal(7, s.NextEventVersion);
+                }),
                 Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
@@ -131,31 +133,32 @@ namespace EverStore.Tests
         public async void SubscribeToStreamAsync_SubscribesToAStream()
         {
             //Arrange
-            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscription>();
+            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscriptionCreation>();
             streamSubscriptionFactory.CreateSubscriptionAsync("contact").Returns(new SubscriptionName("projectId", "subscriptionId"));
-            
+
             var eventRepository = Substitute.For<IEventRepository>();
             var readEvents = Substitute.For<IAsyncCursor<PersistedEvent>>();
             readEvents.MoveNext().Returns(true, true, false);
-            readEvents.Current.Returns(new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 10, StreamVersion = 1}},
-                                       new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 12, StreamVersion = 2}});
+            readEvents.Current.Returns(new List<PersistedEvent>() { new PersistedEvent { GlobalVersion = 10, StreamVersion = 1 } },
+                                       new List<PersistedEvent>() { new PersistedEvent { GlobalVersion = 12, StreamVersion = 2 } });
 
             eventRepository.ReadEventsForwards("contact_1234", 0, Arg.Any<int>()).Returns(readEvents);
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
             var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
-            
+
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
             //Act
-            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c,e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
+            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c, e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
 
             //Assert
-            await eventStreamSubscriber.Received().SubscribeAsync("contact_1234",
-                Arg.Any<CatchUpSubscription>(),
-                3,
-                Arg.Any<SubscriptionName>(),
+            await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
+                {
+                    Assert.Equal("contact_1234", s.Stream);
+                    Assert.Equal(3, s.NextEventVersion);
+                }),
                 Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
@@ -168,36 +171,37 @@ namespace EverStore.Tests
             Assert.Equal("subscriptionId", actualEvents[1].Item1.SubscriptionId);
             Assert.Equal(12, actualEvents[1].Item2.GlobalVersion);
         }
-        
+
         [Fact]
         public async void SubscribeToStreamAsync_SubscribesToAStreamWithLastCheckpoint()
         {
             //Arrange
-            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscription>();
+            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscriptionCreation>();
             streamSubscriptionFactory.CreateSubscriptionAsync("contact").Returns(new SubscriptionName("projectId", "subscriptionId"));
-            
+
             var eventRepository = Substitute.For<IEventRepository>();
             var readEvents = Substitute.For<IAsyncCursor<PersistedEvent>>();
             readEvents.MoveNext().Returns(true, true, false);
-            readEvents.Current.Returns(new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 10, StreamVersion = 5}},
-                                       new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 12, StreamVersion = 6}});
+            readEvents.Current.Returns(new List<PersistedEvent>() { new PersistedEvent { GlobalVersion = 10, StreamVersion = 5 } },
+                                       new List<PersistedEvent>() { new PersistedEvent { GlobalVersion = 12, StreamVersion = 6 } });
 
             eventRepository.ReadEventsForwards("contact_1234", 5, Arg.Any<int>()).Returns(readEvents);
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
             var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
-            
+
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
             //Act
-            await eventContext.SubscribeToStreamAsync("contact_1234", 5, (c,e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
+            await eventContext.SubscribeToStreamAsync("contact_1234", 5, (c, e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
 
             //Assert
-            await eventStreamSubscriber.Received().SubscribeAsync("contact_1234",
-                Arg.Any<CatchUpSubscription>(),
-                7,
-                Arg.Any<SubscriptionName>(),
+            await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
+                {
+                    Assert.Equal("contact_1234", s.Stream);
+                    Assert.Equal(7, s.NextEventVersion);
+                }),
                 Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
@@ -215,7 +219,7 @@ namespace EverStore.Tests
         public async void SubscribeToStreamAsync_SubscribesToAStream_NewStream()
         {
             //Arrange
-            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscription>();
+            var streamSubscriptionFactory = Substitute.For<IEventStreamSubscriptionCreation>();
             streamSubscriptionFactory.CreateSubscriptionAsync("contact").Returns(new SubscriptionName("projectId", "subscriptionId"));
 
             var eventRepository = Substitute.For<IEventRepository>();
@@ -229,18 +233,17 @@ namespace EverStore.Tests
             var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
 
             //Act
-            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c,e) => { }, null, null);
+            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c, e) => { }, null, null);
 
             //Assert
-            await eventStreamSubscriber.Received().SubscribeAsync("contact_1234",
-                Arg.Any<CatchUpSubscription>(),
-                1,
-                Arg.Any<SubscriptionName>(),
+            await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
+                {
+                    Assert.Equal("contact_1234", s.Stream);
+                    Assert.Equal(1, s.NextEventVersion);
+                }),
                 Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
-
         }
-
     }
 }

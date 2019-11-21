@@ -7,12 +7,12 @@ namespace EverStore.Messaging
     {
         private long _currentSequence = -1;
 
-        public EventSequence GetEventSequence(PersistedEvent @event, long? lastCheckpoint, bool hasSubscribedToAllStream)
+        public EventSequence GetEventSequence(PersistedEvent @event, long lastCheckpoint, bool hasSubscribedToAllStream)
         {
             var currentSequence = Interlocked.Read(ref _currentSequence);
 
             var isFirstEventSequence = currentSequence == -1;
-            var sequenceToCompare = isFirstEventSequence && lastCheckpoint.HasValue ? lastCheckpoint.Value : currentSequence;
+            var sequenceToCompare = isFirstEventSequence ? lastCheckpoint : currentSequence;
 
             if (hasSubscribedToAllStream)
             {
