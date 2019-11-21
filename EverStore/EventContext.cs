@@ -39,9 +39,7 @@ namespace EverStore
             var versionRepository = new VersionRepository(mongoContext);
             var eventRepository = new EventRepository(mongoContext);
 
-            var eventSequencer = new EventSequencer();
-            var eventStreamHandler = new EventStreamHandler(eventSequencer);
-            var eventStreamSubscriber = new EventStreamSubscriber(new SubscriberClient.Settings(), eventStreamHandler, eventSequencer, tracer);
+            var eventStreamSubscriber = new EventStreamSubscriber(new SubscriberClient.Settings(), tracer);
             var subscriptionFactory = new SubscriptionCreation(gcpProjectId);
             var streamSubscriptionFactory = new Messaging.EventStreamSubscriptionCreation(topicCreation, subscriptionFactory, conventionIdFactory );
 
@@ -99,7 +97,7 @@ namespace EverStore
             return new ReadEvents(persistedEvents);
         }
 
-        public async Task SubscribeToStreamAsync(string stream, long? lastCheckpoint, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null, Action<CatchUpSubscription, Exception> subscriptionDropped = null)
+        public async Task<IDisposable> SubscribeToStreamAsync(string stream, long? lastCheckpoint, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null, Action<CatchUpSubscription, Exception> subscriptionDropped = null)
         {
             if (lastCheckpoint.HasValue && lastCheckpoint.Value < 0)
             {
@@ -154,7 +152,7 @@ namespace EverStore
 
             var eventStreamSubscription = new EventStreamSubscription(stream, catchUpSubscription, nextEventVersion, subscription, hasSubscribeToAllStream);
 
-            await _eventStreamSubscriber.SubscribeAsync(eventStreamSubscription, eventAppeared, liveProcessingStarted, subscriptionDropped);
+            return await _eventStreamSubscriber.SubscribeAsync(eventStreamSubscription, eventAppeared, liveProcessingStarted, subscriptionDropped);
         }
     }
 }

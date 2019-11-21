@@ -12,29 +12,28 @@ namespace EverStore.Messaging
     internal class EventStreamSubscriber: IEventStreamSubscriber
     {
         private readonly SubscriberClient.Settings _subscriptionSettings;
-        private readonly IEventStreamHandler _eventStreamHandler;
-        private readonly IEventSequencer _eventSequencer;
         private readonly ITracer _tracer;
-        private SubscriberClient _subscriber;
 
-        public EventStreamSubscriber(SubscriberClient.Settings subscriptionSettings, IEventStreamHandler eventStreamHandler, IEventSequencer eventSequencer, ITracer tracer)
+        public EventStreamSubscriber(SubscriberClient.Settings subscriptionSettings, ITracer tracer)
         {
             _subscriptionSettings = subscriptionSettings;
-            _eventStreamHandler = eventStreamHandler;
-            _eventSequencer = eventSequencer;
             _tracer = tracer;
         }
-        public async Task SubscribeAsync(EventStreamSubscription subscription,
+
+        public async Task<DisposableSubscriber> SubscribeAsync(EventStreamSubscription subscription,
             Action<CatchUpSubscription, ResolvedEvent> eventAppeared,
             Action<CatchUpSubscription> liveProcessingStarted = null,
             Action<CatchUpSubscription, Exception> subscriptionDropped = null)
         {
-            _eventSequencer.Initialise(subscription.NextEventVersion);
-            _subscriber = await SubscriberClient.CreateAsync(subscription.SubscriptionName, settings: _subscriptionSettings);
+            var eventSequencer = new EventSequencer();
+            var eventStreamHandler = new EventStreamHandler(eventSequencer);
+            eventSequencer.Initialise(subscription.NextEventVersion);
+
+            var subscriber = await SubscriberClient.CreateAsync(subscription.SubscriptionName, settings: _subscriptionSettings);
 
 #pragma warning disable 4014
             //Disable warning because this task is fire and forget. Its handled internally by the PubSub library, please see the dispose for how to stop/cleanup.
-            _subscriber.StartAsync(
+            subscriber.StartAsync(
 #pragma warning restore 4014
                 async (PubsubMessage message, CancellationToken cancel) =>
                 {
@@ -54,7 +53,7 @@ namespace EverStore.Messaging
                     try
                     {
                         var @event = message.ToModel();
-                        var result = _eventStreamHandler.Handle(@event, subscription, eventAppeared, liveProcessingStarted);
+                        var result = eventStreamHandler.Handle(@event, subscription, eventAppeared, liveProcessingStarted);
                         return await Task.FromResult(result);
                     }
                     catch (Exception exception)
@@ -63,7 +62,7 @@ namespace EverStore.Messaging
                         Task.Run(() =>
 #pragma warning restore 4014
                         {
-                            _subscriber.StopAsync(cancel);
+                            subscriber.StopAsync(cancel);
                             subscriptionDropped?.Invoke(subscription.CatchUpSubscription, exception);
                         }, cancel);
                         
@@ -74,6 +73,8 @@ namespace EverStore.Messaging
                         span.Finish();
                     }
                 });
+
+            return new DisposableSubscriber(subscriber);
         }
     }
 }
