@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using EverStore.Domain;
 using EverStore.Messaging;
@@ -17,16 +18,24 @@ namespace EverStore.Tests.Messaging
         {
             var pubSubPublisherFactory = Substitute.For<IPubSubPublisherFactory>();
             var publisherClient = Substitute.For<PublisherClient>();
-            var topicFactory = Substitute.For<ITopicFactory>();
-            topicFactory.CreateAsync(Arg.Any<string>()).Returns(new TopicName("project", "topic"));
+            var conventionIdFactory = Substitute.For<IConventionIdFactory>();
+            var topicCreation = Substitute.For<ITopicCreation>();
+            topicCreation.CreateAsync(Arg.Any<string>()).Returns(new TopicName("project", "topic"));
             PubsubMessage message = null;
             await publisherClient.PublishAsync(Arg.Do<PubsubMessage>(m => message = m));
 
             pubSubPublisherFactory.CreateAsync(default).ReturnsForAnyArgs(Task.FromResult(publisherClient));
             
-            var publisher = new EventStreamPublisher(topicFactory, null, pubSubPublisherFactory);
+            var publisher = new EventStreamPublisher(topicCreation, null, pubSubPublisherFactory, conventionIdFactory);
 
-            var persistedEvent = new PersistedEvent {Data = Encoding.UTF8.GetBytes("event")};
+            var createdAt = new DateTimeOffset(2019, 11, 21, 9, 20, 0, TimeSpan.FromHours(1));
+            var persistedEvent = new PersistedEvent
+            {
+                GlobalVersion = 12,
+                StreamVersion = 8,
+                Data = Encoding.UTF8.GetBytes("event"), 
+                CreatedAt = createdAt
+            };
 
             await publisher.Publish(persistedEvent, "stream_1", "stream", "1");
 
@@ -36,6 +45,9 @@ namespace EverStore.Tests.Messaging
             Assert.Equal("stream_1", message.Attributes[EventStreamAttributes.Stream]);
             Assert.Equal("stream", message.Attributes[EventStreamAttributes.StreamAggregate]);
             Assert.Equal("1", message.Attributes[EventStreamAttributes.StreamId]);
+            Assert.Equal("8", message.Attributes[EventStreamAttributes.StreamVersion]);
+            Assert.Equal("12", message.Attributes[EventStreamAttributes.GlobalVersion]);
+            Assert.Equal(createdAt, DateTimeOffset.Parse(message.Attributes[EventStreamAttributes.CreatedAt]));
         }
         
         [Fact]
@@ -43,7 +55,8 @@ namespace EverStore.Tests.Messaging
         {
             var pubSubPublisherFactory = Substitute.For<IPubSubPublisherFactory>();
             var publisherClient = Substitute.For<PublisherClient>();
-            var topicFactory = Substitute.For<ITopicFactory>();
+            var topicFactory = Substitute.For<ITopicCreation>();
+            var conventionIdFactory = Substitute.For<IConventionIdFactory>();
             topicFactory.CreateAsync(Arg.Any<string>()).Returns(new TopicName("project", "topic"));
             PubsubMessage message = null;
 
@@ -53,7 +66,7 @@ namespace EverStore.Tests.Messaging
 
             var tracer = Substitute.For<ITracer>();
             tracer.Inject(Arg.Any<ISpanContext>(), Arg.Any<IFormat<ITextMap>>(), Arg.Do<TextMapInjectAdapter>(a => a.Set("tracer", "trace this")));
-            var publisher = new EventStreamPublisher(topicFactory, tracer, pubSubPublisherFactory);
+            var publisher = new EventStreamPublisher(topicFactory, tracer, pubSubPublisherFactory, conventionIdFactory);
 
             var persistedEvent = new PersistedEvent {Data = Encoding.UTF8.GetBytes("event")};
 

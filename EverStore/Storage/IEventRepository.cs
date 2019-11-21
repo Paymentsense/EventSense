@@ -8,5 +8,6 @@ namespace EverStore.Storage
     {
         void AppendEvent(PersistedEvent @event);
         Task<IAsyncCursor<PersistedEvent>> ReadEventsForwards(string stream, long start, int batchSize);
+        Task<IAsyncCursor<PersistedEvent>> ReadAllEventsForwards(long start, int batchSize);
     }
 }

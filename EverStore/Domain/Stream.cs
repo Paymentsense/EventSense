@@ -4,6 +4,8 @@ namespace EverStore.Domain
 {
     public static class Stream
     {
+        public static string All => "$all";
+
         public static void Parse(string stream, out string streamAggregate, out string streamId)
         {
             if (string.IsNullOrWhiteSpace(stream))

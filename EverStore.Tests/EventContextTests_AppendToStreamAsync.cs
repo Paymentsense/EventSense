@@ -7,7 +7,7 @@ using EverStore.Storage;
 using NSubstitute;
 using Xunit;
 
-namespace EverStore.Tests.Storage
+namespace EverStore.Tests
 {
     public class EventContextTests_AppendToStreamAsync
     {
@@ -17,21 +17,21 @@ namespace EverStore.Tests.Storage
         [Fact]
         public async void AppendToStreamAsync_StreamIsValid()
         {
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("", 0, _validEvent));
         }
         
         [Fact]
         public async void AppendToStreamAsync_StreamVersionIsNegative()
         {
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", -1, _validEvent));
         }
 
         [Fact]
         public async void AppendToStreamAsync_NoEvent()
         {
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", 0, null));
         }
 
@@ -40,7 +40,7 @@ namespace EverStore.Tests.Storage
         {
             var @event = new Event{ Data = null };
 
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", 0, @event));
         }
         
@@ -49,7 +49,7 @@ namespace EverStore.Tests.Storage
         {
             var @event = new Event { Data = new byte[0] };
 
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", 0, @event));
         }
 
@@ -64,7 +64,7 @@ namespace EverStore.Tests.Storage
             versionRepository.GetNextGlobalVersion().Returns(2);
 
             var eventStreamPublisher = Substitute.For<IEventStreamPublisher>();
-            var context = new EventContext(eventStreamPublisher, versionRepository, eventRepository);
+            var context = new EventContext(null, eventStreamPublisher, versionRepository, eventRepository , null);
 
             var @event = await context.AppendToStreamAsync("contact_1234", 1, _validEvent);
 

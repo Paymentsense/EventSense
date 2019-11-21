@@ -1,4 +1,7 @@
-﻿using EverStore.Contract;
+﻿using System;
+using EverStore.Contract;
+using EverStore.Messaging;
+using Google.Cloud.PubSub.V1;
 
 namespace EverStore.Domain
 {
@@ -13,6 +16,18 @@ namespace EverStore.Domain
                 StreamVersion = expectedStreamVersion,
                 Data = @event.Data,
                 CreatedAt = @event.CreatedAt
+            };
+        }
+
+        public static PersistedEvent ToModel(this PubsubMessage message)
+        {
+            return new PersistedEvent
+            {
+                GlobalVersion = long.Parse(message.Attributes[EventStreamAttributes.GlobalVersion]),
+                Stream = message.Attributes[EventStreamAttributes.Stream],
+                StreamVersion = long.Parse(message.Attributes[EventStreamAttributes.StreamId]),
+                Data = message.Data.ToByteArray(),
+                CreatedAt = DateTimeOffset.Parse(message.Attributes[EventStreamAttributes.CreatedAt]),
             };
         }
 

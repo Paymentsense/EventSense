@@ -2,7 +2,14 @@
 {
     public class CatchUpSubscription
     {
-        public string StreamId { get; private set; }
-        public string SubscriptionName { get; private set; }
+        public CatchUpSubscription(string subscribedStream, string subscriptionId)
+        {
+            SubscribedStream = subscribedStream;
+            SubscriptionId = subscriptionId;
+        }
+
+        public string SubscribedStream { get; }
+
+        public string SubscriptionId { get; }
     }
 }

@@ -8,7 +8,7 @@ using MongoDB.Driver;
 using NSubstitute;
 using Xunit;
 
-namespace EverStore.Tests.Storage
+namespace EverStore.Tests
 {
     public class EventContextTests_ReadStreamEventsForwardAsync
     {
@@ -17,7 +17,7 @@ namespace EverStore.Tests.Storage
         [InlineData(null)]
         public async void ReadStreamEventsForwardAsync_EmptyStream_Throws(string stream)
         {
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
 
             await Assert.ThrowsAsync<ArgumentException>(() => context.ReadStreamEventsForwardAsync(stream, 1, 1));
         }
@@ -25,7 +25,7 @@ namespace EverStore.Tests.Storage
         [Fact]
         public async void ReadStreamEventsForwardAsync_NegativeStart_Throws()
         {
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
 
             await Assert.ThrowsAsync<ArgumentException>(() => context.ReadStreamEventsForwardAsync("contact_1234", -1, 1));
         }
@@ -33,7 +33,7 @@ namespace EverStore.Tests.Storage
         [Fact]
         public async void ReadStreamEventsForwardAsync_ZeroBatchSize_Throws()
         {
-            var context = new EventContext(null, null, null);
+            var context = new EventContext(null, null, null, null, null);
 
             await Assert.ThrowsAsync<ArgumentException>(() => context.ReadStreamEventsForwardAsync("contact_1234", 1, 0));
         }
@@ -48,7 +48,7 @@ namespace EverStore.Tests.Storage
             var versionRepository = Substitute.For<IVersionRepository>();
             var eventStreamPublisher = Substitute.For<IEventStreamPublisher>();
 
-            var context = new EventContext(eventStreamPublisher, versionRepository, eventRepository);
+            var context = new EventContext(null, eventStreamPublisher, versionRepository, eventRepository, null);
 
             var readEvents = await context.ReadStreamEventsForwardAsync("contact_1234", 1, 1);
 

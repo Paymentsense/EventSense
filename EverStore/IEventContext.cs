@@ -8,6 +8,6 @@ namespace EverStore
     {
         Task<ResolvedEvent> AppendToStreamAsync(string stream, long expectedStreamVersion, Event @event);
         Task<ReadEvents> ReadStreamEventsForwardAsync(string stream, long start, int batchSize);
-        void SubscribeToStreamFrom(string stream, long? lastCheckpoint, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null, Action<CatchUpSubscription, SubscriptionDropReason, Exception> subscriptionDropped = null);
+        Task SubscribeToStreamAsync(string stream, long? lastCheckpoint, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null, Action<CatchUpSubscription, Exception> subscriptionDropped = null);
     }
 }

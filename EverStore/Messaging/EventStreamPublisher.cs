@@ -11,20 +11,23 @@ namespace EverStore.Messaging
 
     internal class EventStreamPublisher : IEventStreamPublisher
     {
-        private readonly ITopicFactory _topicFactory;
+        private readonly ITopicCreation _topicCreation;
         private readonly ITracer _tracer;
         private readonly IPubSubPublisherFactory _pubSubPublisherFactory;
+        private readonly IConventionIdFactory _conventionIdFactory;
 
-        public EventStreamPublisher(ITopicFactory topicFactory, ITracer tracer, IPubSubPublisherFactory pubSubPublisherFactory )
+        public EventStreamPublisher(ITopicCreation topicCreation, ITracer tracer, IPubSubPublisherFactory pubSubPublisherFactory, IConventionIdFactory conventionIdFactory)
         {
-            _topicFactory = topicFactory;
+            _topicCreation = topicCreation;
             _tracer = tracer;
             _pubSubPublisherFactory = pubSubPublisherFactory;
+            _conventionIdFactory = conventionIdFactory;
         }
 
         public async Task<string> Publish(PersistedEvent @event, string stream, string streamAggregate, string streamId)
         {
-            var topicName = await _topicFactory.CreateAsync(streamAggregate);
+            var topicId = _conventionIdFactory.GetTopicId(streamAggregate);
+            var topicName = await _topicCreation.CreateAsync(topicId);
             var publisher = await _pubSubPublisherFactory.CreateAsync(topicName);
 
             var publisherSpan = _tracer?.CreateSpan(Encoding.UTF8.GetString(@event.Data), topicName.TopicId);
@@ -35,9 +38,12 @@ namespace EverStore.Messaging
                     Data = ByteString.CopyFrom(@event.Data),
                     Attributes =
                     {
+                        {EventStreamAttributes.GlobalVersion, @event.GlobalVersion.ToString()},
                         {EventStreamAttributes.Stream, stream},
                         {EventStreamAttributes.StreamId, streamId},
-                        {EventStreamAttributes.StreamAggregate, streamAggregate}
+                        {EventStreamAttributes.StreamAggregate, streamAggregate},
+                        {EventStreamAttributes.StreamVersion, @event.StreamVersion.ToString()},
+                        {EventStreamAttributes.CreatedAt, @event.CreatedAt.ToString()}
                     }
                 };
 
