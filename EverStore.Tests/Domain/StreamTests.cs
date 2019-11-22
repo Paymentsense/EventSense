@@ -24,6 +24,7 @@ namespace EverStore.Tests.Domain
         [InlineData("contact")]
         [InlineData("")]
         [InlineData(" ")]
+        [InlineData("contact_783daa7e-1de6-45d0-874e-b502eab0d6ab")]
         public void StreamIsBadlyFormed(string actualStream)
         {
             Assert.Throws<ArgumentException>(() => Stream.Parse(actualStream, out string streamAggregate, out string streamId));

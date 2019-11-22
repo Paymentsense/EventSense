@@ -2,7 +2,7 @@
 {
     public class EventContextSettings
     {
-        public EventContextSettings(string gcpProjectId, string eventStorageName, string subscriptionIdentifier, string subscriptionTopicPrefix, string subscriptionTopicPostfix)
+        public EventContextSettings(string gcpProjectId, string eventStorageName, string subscriptionTopicPrefix, string subscriptionTopicPostfix, string subscriptionIdentifier = null)
         {
             GcpProjectId = gcpProjectId;
             EventStorageName = eventStorageName;
