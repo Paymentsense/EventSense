@@ -1,39 +1,28 @@
-﻿using System.Threading;
-using EverStore.Domain;
+﻿using EverStore.Domain;
 
 namespace EverStore.Messaging
 {
     internal class EventSequencer : IEventSequencer
     {
-        private const long StartingSequence = -1;
-        private long _currentSequence = StartingSequence;
+        private long _currentSequence;
 
         public void Initialise(long lastCheckpoint)
         {
-            Interlocked.CompareExchange(ref _currentSequence, lastCheckpoint, StartingSequence);
+            _currentSequence = lastCheckpoint;
         }
 
         public EventSequence GetEventSequence(PersistedEvent @event, bool hasSubscribedToAllStream)
         {
-            var currentSequence = Interlocked.Read(ref _currentSequence);
-            
             if (hasSubscribedToAllStream)
             {
                 return new EventSequence(
-                    isInSequence:@event.GlobalVersion == currentSequence,
-                    isInPast:@event.GlobalVersion < currentSequence, 
-                    currentSequence == StartingSequence);
+                    isInPast:@event.GlobalVersion < _currentSequence,
+                    _currentSequence == @event.GlobalVersion);
             }
 
             return new EventSequence(
-                isInSequence: @event.StreamVersion == currentSequence,
-                isInPast: @event.StreamVersion < currentSequence,
-                currentSequence == StartingSequence);
-        }
-
-        public void IncrementEventSequence()
-        {
-            Interlocked.Increment(ref _currentSequence);
+                isInPast: @event.StreamVersion < _currentSequence,
+                _currentSequence == @event.StreamVersion);
         }
     }
 }

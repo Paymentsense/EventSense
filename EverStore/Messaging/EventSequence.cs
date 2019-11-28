@@ -2,16 +2,14 @@
 {
     internal class EventSequence
     {
-        public EventSequence(bool isInSequence, bool isInPast, bool isFirstEvent)
+        public EventSequence(bool isInPast, bool isFirstEvent)
         {
-            IsInSequence = isInSequence;
             IsInPast = isInPast;
             IsFirstEvent = isFirstEvent;
         }
 
-        public bool IsInSequence { get; }
         public bool IsInPast { get; }
-        public bool IsFirstEvent { get; set; }
+        public bool IsFirstEvent { get; }
 
     }
 }

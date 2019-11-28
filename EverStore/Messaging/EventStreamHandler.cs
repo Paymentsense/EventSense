@@ -17,14 +17,9 @@ namespace EverStore.Messaging
         public SubscriberClient.Reply Handle(PersistedEvent @event, EventStreamSubscription subscription, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null)
         {
             var eventSequence = _eventSequencer.GetEventSequence(@event, subscription.HasSubscribeToAllStream);
-            if (!eventSequence.IsInSequence)
+            if (eventSequence.IsInPast)
             {
-                if (eventSequence.IsInPast)
-                {
-                    return SubscriberClient.Reply.Ack;
-                }
-
-                return SubscriberClient.Reply.Nack;
+                return SubscriberClient.Reply.Ack;
             }
 
             if (eventSequence.IsFirstEvent)
@@ -33,8 +28,6 @@ namespace EverStore.Messaging
             }
 
             eventAppeared(subscription.CatchUpSubscription, @event.ToDto());
-
-            _eventSequencer.IncrementEventSequence();
 
             return SubscriberClient.Reply.Ack;
         }

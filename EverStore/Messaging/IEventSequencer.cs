@@ -6,6 +6,5 @@ namespace EverStore.Messaging
     {
         void Initialise(long lastCheckpoint);
         EventSequence GetEventSequence(PersistedEvent @event, bool hasSubscribedToAllStream);
-        void IncrementEventSequence();
     }
 }
