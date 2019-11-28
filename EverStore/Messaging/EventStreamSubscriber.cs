@@ -62,7 +62,7 @@ namespace EverStore.Messaging
                         Task.Run(() =>
 #pragma warning restore 4014
                         {
-                            subscriber.StopAsync(cancel);
+                            subscriber.StopAsync(TimeSpan.FromSeconds(1));
                             subscriptionDropped?.Invoke(subscription.CatchUpSubscription, exception);
                         }, cancel);
                         
