@@ -30,6 +30,18 @@ namespace EverStore
 
         public static IEventContext Create(EventContextSettings settings, IMongoClient mongoClient, ITracer tracer = null, SubscriberClient.Settings subscriptionSettings = null)
         {
+            if (settings == null)
+            {
+                throw new ArgumentException($"Event Context Settings not specified", nameof(settings));
+            }
+
+            settings.CheckSettingsAreValid();
+
+            if (mongoClient == null)
+            {
+                throw new ArgumentException($"MongoDb Driver not specified", nameof(settings));
+            }
+
             var pubSubPublisherFactory = new PublisherFactory();
             var topicCreation = new TopicCreation(settings.GcpProjectId);
             var conventionIdFactory = new ConventionIdFactory(settings.SubscriptionTopicPrefix, settings.SubscriptionTopicPostfix,settings.SubscriptionIdentifier);

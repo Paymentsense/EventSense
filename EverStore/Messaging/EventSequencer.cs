@@ -4,11 +4,11 @@ namespace EverStore.Messaging
 {
     internal class EventSequencer : IEventSequencer
     {
-        private long _currentSequence;
+        private long _initialVersion;
 
         public void Initialise(long lastCheckpoint)
         {
-            _currentSequence = lastCheckpoint;
+            _initialVersion = lastCheckpoint;
         }
 
         public EventSequence GetEventSequence(PersistedEvent @event, bool hasSubscribedToAllStream)
@@ -16,13 +16,13 @@ namespace EverStore.Messaging
             if (hasSubscribedToAllStream)
             {
                 return new EventSequence(
-                    isInPast:@event.GlobalVersion < _currentSequence,
-                    _currentSequence == @event.GlobalVersion);
+                    isInPast:@event.GlobalVersion < _initialVersion,
+                    _initialVersion == @event.GlobalVersion);
             }
 
             return new EventSequence(
-                isInPast: @event.StreamVersion < _currentSequence,
-                _currentSequence == @event.StreamVersion);
+                isInPast: @event.StreamVersion < _initialVersion,
+                _initialVersion == @event.StreamVersion);
         }
     }
 }

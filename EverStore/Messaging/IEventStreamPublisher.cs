@@ -5,6 +5,6 @@ namespace EverStore.Messaging
 {
     internal interface IEventStreamPublisher
     {
-        Task<string> Publish(PersistedEvent @event, string stream, string streamAggregate, string streamId);
+        Task<string[]> Publish(PersistedEvent @event, string stream, string streamAggregate, string streamId);
     }
 }

@@ -24,13 +24,17 @@ namespace EverStore.Messaging
             _conventionIdFactory = conventionIdFactory;
         }
 
-        public async Task<string> Publish(PersistedEvent @event, string stream, string streamAggregate, string streamId)
+        public async Task<string[]> Publish(PersistedEvent @event, string stream, string streamAggregate, string streamId)
         {
-            var topicId = _conventionIdFactory.GetTopicId(streamAggregate);
-            var topicName = await _topicCreation.CreateAsync(topicId);
-            var publisher = await _publisherFactory.CreateAsync(topicName);
+            var streamTopicId = _conventionIdFactory.GetTopicId(streamAggregate);
+            var streamTopicName = await _topicCreation.CreateAsync(streamTopicId);
+            var streamPublisher = await _publisherFactory.CreateAsync(streamTopicName);
 
-            var publisherSpan = _tracer?.CreateSpan(Encoding.UTF8.GetString(@event.Data), topicName.TopicId);
+            var allStreamTopicId = _conventionIdFactory.GetTopicId(Stream.All);
+            var allStreamTopicName = await _topicCreation.CreateAsync(allStreamTopicId);
+            var allStreamPublisher = await _publisherFactory.CreateAsync(allStreamTopicName);
+
+            var publisherSpan = _tracer?.CreateSpan(Encoding.UTF8.GetString(@event.Data), streamTopicName.TopicId);
             try
             {
                 var pubsubMessage = new PubsubMessage
@@ -51,8 +55,7 @@ namespace EverStore.Messaging
                 {
                     pubsubMessage.Attributes.Add(_tracer.CreateSpanInformationCarrier());
                 }
-
-                return await publisher.PublishAsync(pubsubMessage);
+                return await Task.WhenAll(allStreamPublisher.PublishAsync(pubsubMessage), streamPublisher.PublishAsync(pubsubMessage));
             }
             finally
             {
