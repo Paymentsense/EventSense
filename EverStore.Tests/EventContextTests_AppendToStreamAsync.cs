@@ -17,21 +17,21 @@ namespace EverStore.Tests
         [Fact]
         public async void AppendToStreamAsync_StreamIsValid()
         {
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("", 0, _validEvent));
         }
         
         [Fact]
         public async void AppendToStreamAsync_StreamVersionIsNegative()
         {
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", -1, _validEvent));
         }
 
         [Fact]
         public async void AppendToStreamAsync_NoEvent()
         {
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", 0, null));
         }
 
@@ -40,7 +40,7 @@ namespace EverStore.Tests
         {
             var @event = new Event{ Data = null };
 
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", 0, @event));
         }
         
@@ -49,7 +49,7 @@ namespace EverStore.Tests
         {
             var @event = new Event { Data = new byte[0] };
 
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
             await Assert.ThrowsAsync<ArgumentException>(() => context.AppendToStreamAsync("contact_123", 0, @event));
         }
 
@@ -64,7 +64,7 @@ namespace EverStore.Tests
             versionRepository.GetNextGlobalVersion().Returns(2);
 
             var eventStreamPublisher = Substitute.For<IEventStreamPublisher>();
-            var context = new EventContext(null, eventStreamPublisher, versionRepository, eventRepository , null);
+            var context = new EventContext(null, eventStreamPublisher, versionRepository, eventRepository , null, null);
 
             var @event = await context.AppendToStreamAsync("contact_1234", 1, _validEvent);
 

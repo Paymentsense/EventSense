@@ -16,7 +16,7 @@ namespace EverStore.Tests
         [Fact]
         public void SubscribeToStreamAsync_HasInvalidLastCheckpoint_Throws()
         {
-            var eventContext = new EventContext(null, null, null, null, null);
+            var eventContext = new EventContext(null, null, null, null, null, null);
             Assert.ThrowsAsync<ArgumentException>( () => eventContext.SubscribeToStreamAsync("contact_1234", -1, null, null, null));
         }
         
@@ -25,22 +25,29 @@ namespace EverStore.Tests
         [InlineData(null)]
         public void SubscribeToStreamAsync_HasEmptyStream_Throws(string stream)
         {
-            var eventContext = new EventContext(null, null, null, null, null);
+            var eventContext = new EventContext(null, null, null, null, null, null);
             Assert.ThrowsAsync<ArgumentException>( () => eventContext.SubscribeToStreamAsync(stream, 1, null, null, null));
         }
 
         [Fact]
         public void SubscribeToStreamAsync_HasInvalidStream_Throws()
         {
-            var eventContext = new EventContext(null, null, null, null, null);
+            var eventContext = new EventContext(null, null, null, null, null, null);
             Assert.ThrowsAsync<ArgumentException>(() => eventContext.SubscribeToStreamAsync("invalid stream", 1, null, null, null));
         }
         
         [Fact]
         public void SubscribeToStreamAsync_EmptyEventAppeared_Throws()
         {
-            var eventContext = new EventContext(null, null, null, null, null);
+            var eventContext = new EventContext(null, null, null, null, null, null);
             Assert.ThrowsAsync<ArgumentException>(() => eventContext.SubscribeToStreamAsync("contact_1234", 1, null, null, null));
+        }
+        
+        [Fact]
+        public void SubscribeToStreamAsync_EmptySubscriptionIdentifier_Throws()
+        {
+            var eventContext = new EventContext(null, null, null, null, null, null);
+            Assert.ThrowsAsync<ArgumentException>(() => eventContext.SubscribeToStreamAsync("contact_1234", 1, (_,__) => {}, null, null));
         }
 
         [Fact]
@@ -60,7 +67,7 @@ namespace EverStore.Tests
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
-            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
+            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory, "subscriptionIdentifier");
             
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
@@ -103,7 +110,7 @@ namespace EverStore.Tests
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
-            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
+            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory, "subscriptionIdentifier");
 
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
@@ -146,7 +153,7 @@ namespace EverStore.Tests
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
-            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
+            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory, "subscriptionIdentifier");
 
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
@@ -189,7 +196,7 @@ namespace EverStore.Tests
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
-            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
+            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory, "subscriptionIdentifier");
 
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
@@ -230,7 +237,7 @@ namespace EverStore.Tests
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
-            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory);
+            var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory, "subscriptionIdentifier");
 
             //Act
             await eventContext.SubscribeToStreamAsync("contact_1234", null, (c, e) => { }, null, null);

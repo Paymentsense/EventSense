@@ -27,7 +27,7 @@
                 topic = $"{topic}_{_postfix}";
             }
 
-            return topic;
+            return topic.Replace("$", "");
         }
         
         public string GetSubscriptionId(string streamAggregate)
@@ -44,7 +44,7 @@
                 subscription = $"{subscription}_{_postfix}";
             }
 
-            return subscription;
+            return subscription.Replace("$", "");
         }
     }
 }

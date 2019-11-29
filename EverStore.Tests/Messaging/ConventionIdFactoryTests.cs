@@ -7,6 +7,7 @@ namespace EverStore.Tests.Messaging
     {
         [Theory]
         [InlineData("prefix", "stream", "postfix", "prefix_stream_postfix")]
+        [InlineData("$prefix", "st$ream", "postfix$", "prefix_stream_postfix")]
         [InlineData("", "stream", "postfix", "stream_postfix")]
         [InlineData("prefix", "stream", "", "prefix_stream")]
         [InlineData("", "stream", "", "stream")]
@@ -24,6 +25,7 @@ namespace EverStore.Tests.Messaging
         
         [Theory]
         [InlineData("prefix","subscriptionIdentifier", "stream", "postfix", "prefix_subscriptionIdentifier_stream_postfix")]
+        [InlineData("prefix$","subscription$Identifier", "stream$", "$postfix", "prefix_subscriptionIdentifier_stream_postfix")]
         [InlineData("", "subscriptionIdentifier", "stream", "postfix", "subscriptionIdentifier_stream_postfix")]
         [InlineData("prefix", "subscriptionIdentifier", "stream", "", "prefix_subscriptionIdentifier_stream")]
         [InlineData("", "subscriptionIdentifier", "stream", "", "subscriptionIdentifier_stream")]

@@ -18,14 +18,16 @@ namespace EverStore
         private readonly IVersionRepository _versionRepository;
         private readonly IEventRepository _eventRepository;
         private readonly IEventStreamSubscriptionCreation _eventStreamSubscriptionCreation;
+        private readonly string _subscriptionIdentifier;
 
-        internal EventContext(IEventStreamSubscriber eventStreamSubscriber, IEventStreamPublisher eventStreamPublisher, IVersionRepository versionRepository, IEventRepository eventRepository, IEventStreamSubscriptionCreation eventStreamSubscriptionCreation)
+        internal EventContext(IEventStreamSubscriber eventStreamSubscriber, IEventStreamPublisher eventStreamPublisher, IVersionRepository versionRepository, IEventRepository eventRepository, IEventStreamSubscriptionCreation eventStreamSubscriptionCreation, string subscriptionIdentifier)
         {
             _eventStreamSubscriber = eventStreamSubscriber;
             _eventStreamPublisher = eventStreamPublisher;
             _versionRepository = versionRepository;
             _eventRepository = eventRepository;
             _eventStreamSubscriptionCreation = eventStreamSubscriptionCreation;
+            _subscriptionIdentifier = subscriptionIdentifier;
         }
 
         public static IEventContext Create(EventContextSettings settings, IMongoClient mongoClient, ITracer tracer = null, SubscriberClient.Settings subscriptionSettings = null)
@@ -61,7 +63,7 @@ namespace EverStore
             var subscriptionFactory = new SubscriptionCreation(settings.GcpProjectId);
             var streamSubscriptionFactory = new Messaging.EventStreamSubscriptionCreation(topicCreation, subscriptionFactory, conventionIdFactory);
 
-            return new EventContext(eventStreamSubscriber, eventPublisher, versionRepository, eventRepository, streamSubscriptionFactory);
+            return new EventContext(eventStreamSubscriber, eventPublisher, versionRepository, eventRepository, streamSubscriptionFactory, settings.SubscriptionIdentifier);
         }
 
         public async Task<ResolvedEvent> AppendToStreamAsync(string stream, long expectedStreamVersion, Event @event)
@@ -130,6 +132,11 @@ namespace EverStore
             if (eventAppeared == null)
             {
                 throw new ArgumentException($"{nameof(eventAppeared)} cannot be null", nameof(eventAppeared));
+            }
+
+            if (string.IsNullOrEmpty(_subscriptionIdentifier))
+            {
+                throw new ArgumentException($"{nameof(_subscriptionIdentifier)} is empty", nameof(_subscriptionIdentifier));
             }
 
             string streamAggregate;

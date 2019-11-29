@@ -17,7 +17,7 @@ namespace EverStore.Tests
         [InlineData(null)]
         public async void ReadStreamEventsForwardAsync_EmptyStream_Throws(string stream)
         {
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
 
             await Assert.ThrowsAsync<ArgumentException>(() => context.ReadStreamEventsForwardAsync(stream, 1, 1));
         }
@@ -25,7 +25,7 @@ namespace EverStore.Tests
         [Fact]
         public async void ReadStreamEventsForwardAsync_NegativeStart_Throws()
         {
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
 
             await Assert.ThrowsAsync<ArgumentException>(() => context.ReadStreamEventsForwardAsync("contact_1234", -1, 1));
         }
@@ -33,7 +33,7 @@ namespace EverStore.Tests
         [Fact]
         public async void ReadStreamEventsForwardAsync_ZeroBatchSize_Throws()
         {
-            var context = new EventContext(null, null, null, null, null);
+            var context = new EventContext(null, null, null, null, null, null);
 
             await Assert.ThrowsAsync<ArgumentException>(() => context.ReadStreamEventsForwardAsync("contact_1234", 1, 0));
         }
@@ -48,7 +48,7 @@ namespace EverStore.Tests
             var versionRepository = Substitute.For<IVersionRepository>();
             var eventStreamPublisher = Substitute.For<IEventStreamPublisher>();
 
-            var context = new EventContext(null, eventStreamPublisher, versionRepository, eventRepository, null);
+            var context = new EventContext(null, eventStreamPublisher, versionRepository, eventRepository, null, null);
 
             var readEvents = await context.ReadStreamEventsForwardAsync("contact_1234", 1, 1);
 

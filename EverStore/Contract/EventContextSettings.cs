@@ -29,10 +29,6 @@ namespace EverStore.Contract
             {
                 throw new ArgumentException($"{nameof(EventStorageName)} is empty", nameof(EventStorageName));
             }
-            if (string.IsNullOrEmpty(SubscriptionIdentifier))
-            {
-                throw new ArgumentException($"{nameof(SubscriptionIdentifier)} is empty", nameof(SubscriptionIdentifier));
-            }
             if (string.IsNullOrEmpty(SubscriptionTopicPrefix))
             {
                 throw new ArgumentException($"{nameof(SubscriptionTopicPrefix)} is empty", nameof(SubscriptionTopicPrefix));
