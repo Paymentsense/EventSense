@@ -21,7 +21,7 @@ namespace EverStore.Messaging
         }
 
         public async Task<DisposableSubscriber> SubscribeAsync(EventStreamSubscription subscription,
-            Action<CatchUpSubscription, ResolvedEvent> eventAppeared,
+            Func<CatchUpSubscription, ResolvedEvent, bool> eventAppeared,
             Action<CatchUpSubscription> liveProcessingStarted = null,
             Action<CatchUpSubscription, Exception> subscriptionDropped = null)
         {
@@ -42,13 +42,13 @@ namespace EverStore.Messaging
                         return await Task.FromResult(SubscriberClient.Reply.Nack);
                     }
 
-                    if (!subscription.HasSubscribeToAllStream && string.Equals(message.Attributes[EventStreamAttributes.Stream], subscription.Stream, StringComparison.InvariantCulture))
+                    if (!subscription.HasSubscribeToAllStream && !string.Equals(message.Attributes[EventStreamAttributes.Stream], subscription.Stream, StringComparison.InvariantCulture))
                     {
                         return await Task.FromResult(SubscriberClient.Reply.Ack);
                     }
 
-                    var span = _tracer.StartNewSpanChildFrom(message, subscription.SubscriptionName.SubscriptionId);
-                    _tracer.ScopeManager.Activate(span, true);
+                    var span = _tracer?.StartNewSpanChildFrom(message, subscription.SubscriptionName.SubscriptionId);
+                    _tracer?.ScopeManager.Activate(span, true);
 
                     try
                     {
@@ -70,7 +70,7 @@ namespace EverStore.Messaging
                     }
                     finally
                     {
-                        span.Finish();
+                        span?.Finish();
                     }
                 });
 

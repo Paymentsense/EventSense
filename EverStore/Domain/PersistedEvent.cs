@@ -7,12 +7,10 @@ namespace EverStore.Domain
     {
         [BsonId]
         public long GlobalVersion { get; set; }
-
         public string Stream { get; set; }
+        public string StreamId { get; set; }
         public long StreamVersion { get; set; }
-
         public byte[] Data { get; set; }
-
         public DateTimeOffset CreatedAt { get; set; }
     }
 }

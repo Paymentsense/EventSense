@@ -25,7 +25,8 @@ namespace EverStore.Domain
             {
                 GlobalVersion = long.Parse(message.Attributes[EventStreamAttributes.GlobalVersion]),
                 Stream = message.Attributes[EventStreamAttributes.Stream],
-                StreamVersion = long.Parse(message.Attributes[EventStreamAttributes.StreamId]),
+                StreamId = message.Attributes[EventStreamAttributes.StreamId],
+                StreamVersion = long.Parse(message.Attributes[EventStreamAttributes.StreamVersion]),
                 Data = message.Data.ToByteArray(),
                 CreatedAt = DateTimeOffset.Parse(message.Attributes[EventStreamAttributes.CreatedAt]),
             };

@@ -7,7 +7,7 @@ namespace EverStore.Messaging
     internal interface IEventStreamSubscriber
     {
         Task<DisposableSubscriber> SubscribeAsync(EventStreamSubscription subscription,
-            Action<CatchUpSubscription, ResolvedEvent> eventAppeared,
+            Func<CatchUpSubscription, ResolvedEvent, bool> eventAppeared,
             Action<CatchUpSubscription> liveProcessingStarted = null,
             Action<CatchUpSubscription, Exception> subscriptionDropped = null);
     }

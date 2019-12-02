@@ -7,6 +7,6 @@ namespace EverStore.Messaging
 {
     internal interface IEventStreamHandler
     {
-        SubscriberClient.Reply Handle(PersistedEvent @event, EventStreamSubscription subscription, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null);
+        SubscriberClient.Reply Handle(PersistedEvent @event, EventStreamSubscription subscription, Func<CatchUpSubscription, ResolvedEvent, bool> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null);
     }
 }

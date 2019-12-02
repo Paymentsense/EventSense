@@ -117,7 +117,7 @@ namespace EverStore
             return new ReadEvents(persistedEvents);
         }
 
-        public async Task<IDisposable> SubscribeToStreamAsync(string stream, long? lastCheckpoint, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null, Action<CatchUpSubscription, Exception> subscriptionDropped = null)
+        public async Task<IDisposable> SubscribeToStreamAsync(string stream, long? lastCheckpoint, Func<CatchUpSubscription, ResolvedEvent, bool> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null, Action<CatchUpSubscription, Exception> subscriptionDropped = null)
         {
             if (lastCheckpoint.HasValue && lastCheckpoint.Value < 0)
             {

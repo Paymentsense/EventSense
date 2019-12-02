@@ -14,7 +14,7 @@ namespace EverStore.Messaging
             _eventSequencer = eventSequencer;
         }
 
-        public SubscriberClient.Reply Handle(PersistedEvent @event, EventStreamSubscription subscription, Action<CatchUpSubscription, ResolvedEvent> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null)
+        public SubscriberClient.Reply Handle(PersistedEvent @event, EventStreamSubscription subscription, Func<CatchUpSubscription, ResolvedEvent, bool> eventAppeared, Action<CatchUpSubscription> liveProcessingStarted = null)
         {
             var eventSequence = _eventSequencer.GetEventSequence(@event, subscription.HasSubscribeToAllStream);
             if (eventSequence.IsInPast)
@@ -27,9 +27,9 @@ namespace EverStore.Messaging
                 liveProcessingStarted?.Invoke(subscription.CatchUpSubscription);
             }
 
-            eventAppeared(subscription.CatchUpSubscription, @event.ToDto());
+            bool response = eventAppeared(subscription.CatchUpSubscription, @event.ToDto());
 
-            return SubscriberClient.Reply.Ack;
+            return response ? SubscriberClient.Reply.Ack : SubscriberClient.Reply.Nack;
         }
     }
 }

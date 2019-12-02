@@ -47,7 +47,7 @@ namespace EverStore.Tests
         public void SubscribeToStreamAsync_EmptySubscriptionIdentifier_Throws()
         {
             var eventContext = new EventContext(null, null, null, null, null, null);
-            Assert.ThrowsAsync<ArgumentException>(() => eventContext.SubscribeToStreamAsync("contact_1234", 1, (_,__) => {}, null, null));
+            Assert.ThrowsAsync<ArgumentException>(() => eventContext.SubscribeToStreamAsync("contact_1234", 1, (_, __) => true, null, null));
         }
 
         [Fact]
@@ -56,31 +56,35 @@ namespace EverStore.Tests
             //Arrange
             var streamSubscriptionFactory = Substitute.For<IEventStreamSubscriptionCreation>();
             streamSubscriptionFactory.CreateSubscriptionAsync(Stream.All).Returns(new SubscriptionName("projectId", "subscriptionId"));
-            
+
             var eventRepository = Substitute.For<IEventRepository>();
             var readEvents = Substitute.For<IAsyncCursor<PersistedEvent>>();
             readEvents.MoveNext().Returns(true, true, false);
             readEvents.Current.Returns(new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 1}},
-                                       new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 2}});
+                new List<PersistedEvent>() {new PersistedEvent {GlobalVersion = 2}});
 
             eventRepository.ReadAllEventsForwards(0, Arg.Any<int>()).Returns(readEvents);
 
             var eventStreamSubscriber = Substitute.For<IEventStreamSubscriber>();
 
             var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory, "subscriptionIdentifier");
-            
+
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
             //Act
-            await eventContext.SubscribeToStreamAsync(Stream.All, null, (c,e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
+            await eventContext.SubscribeToStreamAsync(Stream.All, null, (c, e) =>
+            {
+                actualEvents.Add(Tuple.Create(c, e));
+                return true;
+            }, null, null);
 
-            //Assert
+        //Assert
             await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
                 {
                     Assert.Equal(Stream.All, s.Stream);
                     Assert.Equal(3, s.NextEventVersion);
                 }),
-                Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
+                Arg.Any<Func<CatchUpSubscription, ResolvedEvent, bool>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
 
@@ -115,7 +119,11 @@ namespace EverStore.Tests
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
             //Act
-            await eventContext.SubscribeToStreamAsync(Stream.All, 5, (c, e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
+            await eventContext.SubscribeToStreamAsync(Stream.All, 5, (c, e) =>
+            {
+                actualEvents.Add(Tuple.Create(c, e));
+                return true;
+            }, null, null);
 
             //Assert
             await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
@@ -123,7 +131,7 @@ namespace EverStore.Tests
                     Assert.Equal(Stream.All, s.Stream);
                     Assert.Equal(7, s.NextEventVersion);
                 }),
-                Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
+                Arg.Any<Func<CatchUpSubscription, ResolvedEvent, bool>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
 
@@ -158,7 +166,11 @@ namespace EverStore.Tests
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
             //Act
-            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c, e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
+            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c, e) =>
+            {
+                actualEvents.Add(Tuple.Create(c, e));
+                return true;
+            }, null, null);
 
             //Assert
             await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
@@ -166,7 +178,7 @@ namespace EverStore.Tests
                     Assert.Equal("contact_1234", s.Stream);
                     Assert.Equal(3, s.NextEventVersion);
                 }),
-                Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
+                Arg.Any<Func<CatchUpSubscription, ResolvedEvent, bool>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
 
@@ -201,7 +213,11 @@ namespace EverStore.Tests
             var actualEvents = new List<Tuple<CatchUpSubscription, ResolvedEvent>>();
 
             //Act
-            await eventContext.SubscribeToStreamAsync("contact_1234", 5, (c, e) => actualEvents.Add(Tuple.Create(c, e)), null, null);
+            await eventContext.SubscribeToStreamAsync("contact_1234", 5, (c, e) =>
+            {
+                actualEvents.Add(Tuple.Create(c, e));
+                return true;
+            }, null, null);
 
             //Assert
             await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
@@ -209,7 +225,7 @@ namespace EverStore.Tests
                     Assert.Equal("contact_1234", s.Stream);
                     Assert.Equal(7, s.NextEventVersion);
                 }),
-                Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
+                Arg.Any<Func<CatchUpSubscription, ResolvedEvent, bool>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
 
@@ -240,7 +256,7 @@ namespace EverStore.Tests
             var eventContext = new EventContext(eventStreamSubscriber, null, null, eventRepository, streamSubscriptionFactory, "subscriptionIdentifier");
 
             //Act
-            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c, e) => { }, null, null);
+            await eventContext.SubscribeToStreamAsync("contact_1234", null, (c, e) => true, null, null);
 
             //Assert
             await eventStreamSubscriber.Received().SubscribeAsync(Arg.Do<EventStreamSubscription>(s =>
@@ -248,7 +264,7 @@ namespace EverStore.Tests
                     Assert.Equal("contact_1234", s.Stream);
                     Assert.Equal(1, s.NextEventVersion);
                 }),
-                Arg.Any<Action<CatchUpSubscription, ResolvedEvent>>(),
+                Arg.Any<Func<CatchUpSubscription, ResolvedEvent, bool>>(),
                 Arg.Any<Action<CatchUpSubscription>>(),
                 Arg.Any<Action<CatchUpSubscription, Exception>>());
         }
